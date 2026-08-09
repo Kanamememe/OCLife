@@ -1,0 +1,76 @@
+(function(){
+'use strict';
+const VERSION='0.3.0';
+const S=window.OCLifeStore;
+const STYLE_ID='oclife-character-editor-style';
+let pendingAvatar='';
+let cropState=null;
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const q=s=>document.querySelector(s);
+const clean=s=>String(s??'').trim();
+
+function injectStyle(){if(document.getElementById(STYLE_ID))return;const st=document.createElement('style');st.id=STYLE_ID;st.textContent=`
+.avatar{overflow:hidden;position:relative}.avatar img.oc-avatar-img{width:100%;height:100%;object-fit:cover;display:block}
+.oc-char-actions{display:flex;gap:7px;margin-left:auto}.oc-edit-character{border:1px solid var(--line,#e7dfd5);background:var(--panel,#fffdf9);border-radius:11px;padding:7px 10px;font-size:12px;color:inherit}
+.oc-avatar-editor{display:grid;grid-template-columns:92px 1fr;gap:13px;align-items:center;padding:12px;border:1px solid var(--line,#e7dfd5);border-radius:16px;margin:10px 0;background:rgba(255,255,255,.35)}
+.oc-avatar-preview{width:88px;height:88px;border-radius:50%;overflow:hidden;background:#ece6dc;display:grid;place-items:center;font-size:30px;border:1px solid var(--line,#e7dfd5)}.oc-avatar-preview img{width:100%;height:100%;object-fit:cover}.oc-avatar-buttons{display:flex;gap:7px;flex-wrap:wrap}.oc-small-btn{border:1px solid var(--line,#e7dfd5);background:var(--panel,#fffdf9);border-radius:11px;padding:8px 10px;color:inherit}
+.oc-crop-bg{position:fixed;inset:0;z-index:300;background:rgba(20,20,20,.72);display:flex;align-items:center;justify-content:center;padding:18px}.oc-crop-modal{width:min(520px,100%);background:var(--panel,#fffdf9);border-radius:24px;padding:17px;color:var(--text,#25231f)}.oc-crop-stage{width:100%;aspect-ratio:1/1;max-height:62vh;position:relative;overflow:hidden;border-radius:18px;background:#181818;touch-action:none}.oc-crop-stage img{position:absolute;left:50%;top:50%;max-width:none;max-height:none;user-select:none;pointer-events:none;transform-origin:center center}.oc-crop-mask{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 9999px rgba(0,0,0,.38)}.oc-crop-mask:after{content:'';position:absolute;inset:8%;border:2px solid rgba(255,255,255,.9);border-radius:50%}.oc-crop-controls{margin-top:12px}.oc-crop-controls input[type=range]{width:100%}.oc-crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.oc-edit-grid .field{margin:10px 0}.oc-edit-grid textarea{min-height:72px}.oc-avatar-hint{font-size:11px;color:var(--muted,#8a8378);line-height:1.5;margin-top:5px}
+`;document.head.appendChild(st)}
+
+function avatarHtml(c){return c?.avatarData?`<img class="oc-avatar-img" src="${c.avatarData}" alt="${esc(c.name)}">`:esc(c?.emoji||'◉')}
+
+function findCharByName(name,worldId){name=clean(name);if(!name)return null;let chars=S.all('characters');if(worldId)chars=chars.filter(c=>c.worldId===worldId);return chars.find(c=>c.name===name)||null}
+function cardChar(card){
+  let name='';
+  if(card.classList.contains('chat-card'))name=clean(card.querySelector('h3')?.textContent).split('×')[0].trim();
+  else name=clean(card.querySelector('h3')?.textContent||card.querySelector('b')?.textContent);
+  return findCharByName(name);
+}
+function paintAvatars(root=document){
+  root.querySelectorAll?.('.status-card,.character-card,.chat-card,.moment-card').forEach(card=>{const c=cardChar(card);const av=card.querySelector('.avatar');if(c&&av&&av.dataset.avatarVersion!==String(c.updatedAt||c.createdAt||'0')){av.innerHTML=avatarHtml(c);av.dataset.avatarVersion=String(c.updatedAt||c.createdAt||'0')}});
+}
+
+function currentAddModal(){const modal=document.querySelector('#modalRoot .modal');if(!modal)return null;const h=clean(modal.querySelector('h2')?.textContent);return /新增角色|建立角色/.test(h)?modal:null}
+function makeAvatarEditor(value='',emoji='◉'){
+  return `<div class="oc-avatar-editor" data-oc-avatar-editor><div class="oc-avatar-preview">${value?`<img src="${value}">`:esc(emoji||'◉')}</div><div><b>角色頭像</b><div class="oc-avatar-buttons"><button type="button" class="oc-small-btn" data-avatar-choose>選擇圖片</button><button type="button" class="oc-small-btn" data-avatar-remove ${value?'':'disabled'}>移除頭像</button></div><div class="oc-avatar-hint">選擇後可直接拖動、縮放並裁剪。保存的是裁好的小圖，不保存整張原圖。</div><input type="file" accept="image/*" data-avatar-file hidden></div></div>`
+}
+function bindAvatarEditor(container,getValue,setValue,getEmoji){
+  const file=container.querySelector('[data-avatar-file]'),choose=container.querySelector('[data-avatar-choose]'),remove=container.querySelector('[data-avatar-remove]');
+  choose.onclick=()=>file.click();
+  file.onchange=()=>{const f=file.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>openCropper(reader.result,data=>{setValue(data);refreshAvatarEditor(container,data,getEmoji())});reader.readAsDataURL(f);file.value=''};
+  remove.onclick=()=>{setValue('');refreshAvatarEditor(container,'',getEmoji())};
+}
+function refreshAvatarEditor(container,value,emoji){const preview=container.querySelector('.oc-avatar-preview');preview.innerHTML=value?`<img src="${value}">`:esc(emoji||'◉');container.querySelector('[data-avatar-remove]').disabled=!value}
+
+function openCropper(src,onDone){
+  const bg=document.createElement('div');bg.className='oc-crop-bg';bg.innerHTML=`<div class="oc-crop-modal"><h2>裁剪頭像</h2><div class="oc-crop-stage"><img id="ocCropImg"><div class="oc-crop-mask"></div></div><div class="oc-crop-controls"><label>縮放</label><input id="ocCropZoom" type="range" min="1" max="4" step="0.01" value="1"><div class="oc-avatar-hint">拖動圖片調整位置，滑桿控制縮放。圓圈是實際頭像可見範圍。</div></div><div class="oc-crop-actions"><button class="secondary" id="ocCropCancel">取消</button><button class="primary" id="ocCropSave">使用這張</button></div></div>`;document.body.appendChild(bg);
+  const stage=bg.querySelector('.oc-crop-stage'),img=bg.querySelector('#ocCropImg'),zoom=bg.querySelector('#ocCropZoom');
+  cropState={x:0,y:0,scale:1,baseScale:1,w:0,h:0,drag:false,px:0,py:0};
+  img.onload=()=>{const r=stage.getBoundingClientRect();cropState.w=img.naturalWidth;cropState.h=img.naturalHeight;cropState.baseScale=Math.max(r.width/img.naturalWidth,r.height/img.naturalHeight);applyCropTransform()};img.src=src;
+  function applyCropTransform(){img.style.width=cropState.w+'px';img.style.height=cropState.h+'px';img.style.transform=`translate(calc(-50% + ${cropState.x}px),calc(-50% + ${cropState.y}px)) scale(${cropState.baseScale*cropState.scale})`}
+  zoom.oninput=()=>{cropState.scale=Number(zoom.value);applyCropTransform()};
+  const start=e=>{cropState.drag=true;const p=e.touches?.[0]||e;cropState.px=p.clientX;cropState.py=p.clientY;e.preventDefault()};
+  const move=e=>{if(!cropState.drag)return;const p=e.touches?.[0]||e;cropState.x+=p.clientX-cropState.px;cropState.y+=p.clientY-cropState.py;cropState.px=p.clientX;cropState.py=p.clientY;applyCropTransform();e.preventDefault()};
+  const end=()=>cropState.drag=false;
+  stage.addEventListener('pointerdown',start);window.addEventListener('pointermove',move);window.addEventListener('pointerup',end);
+  stage.addEventListener('touchstart',start,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',end);
+  bg.querySelector('#ocCropCancel').onclick=()=>bg.remove();
+  bg.querySelector('#ocCropSave').onclick=()=>{const r=stage.getBoundingClientRect(),canvas=document.createElement('canvas'),size=384;canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const s=cropState.baseScale*cropState.scale;const dw=cropState.w*s,dh=cropState.h*s;const dx=(r.width-dw)/2+cropState.x,dy=(r.height-dh)/2+cropState.y;const ratio=size/r.width;ctx.drawImage(img,dx*ratio,dy*ratio,dw*ratio,dh*ratio);const out=canvas.toDataURL('image/jpeg',0.84);bg.remove();onDone(out)};
+}
+
+function enhanceAddModal(){const modal=currentAddModal();if(!modal||modal.dataset.avatarEnhanced)return;modal.dataset.avatarEnhanced='1';pendingAvatar='';const anchor=modal.querySelector('.two,.field');if(anchor){const wrap=document.createElement('div');wrap.innerHTML=makeAvatarEditor('',q('#ce')?.value||'◉');anchor.after(wrap.firstElementChild);const ed=modal.querySelector('[data-oc-avatar-editor]');bindAvatarEditor(ed,()=>pendingAvatar,v=>pendingAvatar=v,()=>q('#ce')?.value||'◉')}
+  const old=S.createCharacter;if(!old.__avatarWrapped){const wrapped=function(input){const c=old.call(S,Object.assign({},input,{avatarData:pendingAvatar||input.avatarData||''}));pendingAvatar='';return c};wrapped.__avatarWrapped=true;wrapped.__original=old;S.createCharacter=wrapped}
+}
+
+function editModal(c){
+  const root=document.querySelector('#modalRoot');root.innerHTML=`<div class="modal-bg"><div class="modal oc-edit-grid"><h2>編輯角色</h2>${makeAvatarEditor(c.avatarData||'',c.emoji||'◉')}<div class="two"><div class="field"><label>名字</label><input id="ecn" value="${esc(c.name)}"></div><div class="field"><label>圖示／無頭像時顯示</label><input id="ece" value="${esc(c.emoji||'◉')}"></div></div><div class="two"><div class="field"><label>性別</label><input id="ecg" value="${esc(c.gender||'')}"></div><div class="field"><label>年齡</label><input id="eca" value="${esc(c.age||'')}"></div></div><div class="field"><label>身份／職業</label><input id="eci" value="${esc(c.identity||'')}"></div><div class="field"><label>外貌</label><textarea id="ecap">${esc(c.appearance||'')}</textarea></div><div class="field"><label>性格</label><textarea id="ecp">${esc(c.personality||'')}</textarea></div><div class="field"><label>說話方式</label><textarea id="ecs">${esc(c.speech||'')}</textarea></div><div class="field"><label>與其他角色的關係</label><textarea id="ecr">${esc(c.relationships||'')}</textarea></div><div class="field"><label>習慣／喜好</label><textarea id="ech">${esc(c.habits||'')}</textarea></div><div class="field"><label>背景經歷</label><textarea id="ecb">${esc(c.background||'')}</textarea></div><div class="field"><label>能力／技能</label><textarea id="ecab">${esc(c.abilities||'')}</textarea></div><div class="field"><label>禁忌／底線</label><textarea id="ecbo">${esc(c.boundaries||'')}</textarea></div><div class="field"><label>補充</label><textarea id="ecn2">${esc(c.notes||'')}</textarea></div><div class="actions"><button class="secondary" data-edit-cancel>取消</button><button class="primary" data-edit-save>保存修改</button></div></div></div>`;
+  let avatar=c.avatarData||'';const ed=root.querySelector('[data-oc-avatar-editor]');bindAvatarEditor(ed,()=>avatar,v=>avatar=v,()=>root.querySelector('#ece')?.value||'◉');root.querySelector('[data-edit-cancel]').onclick=()=>root.innerHTML='';root.querySelector('[data-edit-save]').onclick=()=>{const patch={name:clean(root.querySelector('#ecn').value)||c.name,emoji:root.querySelector('#ece').value||'◉',gender:root.querySelector('#ecg').value,age:root.querySelector('#eca').value,identity:root.querySelector('#eci').value,appearance:root.querySelector('#ecap').value,personality:root.querySelector('#ecp').value,speech:root.querySelector('#ecs').value,relationships:root.querySelector('#ecr').value,habits:root.querySelector('#ech').value,background:root.querySelector('#ecb').value,abilities:root.querySelector('#ecab').value,boundaries:root.querySelector('#ecbo').value,notes:root.querySelector('#ecn2').value,avatarData:avatar};S.update('characters',c.id,patch);root.innerHTML='';paintAvatars();window.dispatchEvent(new CustomEvent('oclife:character-edited',{detail:{id:c.id}}));location.reload()};
+}
+
+function addEditButtons(root=document){root.querySelectorAll?.('.character-card').forEach(card=>{if(card.querySelector('.oc-edit-character'))return;const c=cardChar(card);if(!c)return;const row=card.querySelector('.row')||card;const actions=document.createElement('div');actions.className='oc-char-actions';actions.innerHTML='<button type="button" class="oc-edit-character">編輯</button>';actions.querySelector('button').onclick=e=>{e.stopPropagation();editModal(c)};row.appendChild(actions)})}
+function enhance(){injectStyle();enhanceAddModal();paintAvatars();addEditButtons()}
+const observer=new MutationObserver(()=>enhance());observer.observe(document.documentElement,{childList:true,subtree:true});document.readyState==='loading'?document.addEventListener('DOMContentLoaded',enhance,{once:true}):enhance();
+window.OCLifeCharacterEditor={version:VERSION,edit:editModal,paintAvatars,openCropper};
+})();
