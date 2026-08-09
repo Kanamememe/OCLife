@@ -1,0 +1,7 @@
+(function(){
+'use strict';
+async function callOpenAICompatible({baseUrl,apiKey,model,messages,temperature=.8}){const base=(baseUrl||'').replace(/\/+$/,'');const url=/\/chat\/completions$/.test(base)?base:`${base}/chat/completions`;const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model,messages,temperature})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data?.error?.message||data?.message||`HTTP ${res.status}`);return data?.choices?.[0]?.message?.content||''}
+async function callGemini({baseUrl,apiKey,model,messages,temperature=.8}){const base=(baseUrl||'https://generativelanguage.googleapis.com/v1beta').replace(/\/+$/,'');const prompt=messages.map(m=>`${m.role.toUpperCase()}:\n${m.content}`).join('\n\n');const res=await fetch(`${base}/models/${encodeURIComponent(model)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature}})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data?.error?.message||`HTTP ${res.status}`);return(data?.candidates||[]).flatMap(x=>x?.content?.parts||[]).map(x=>x?.text||'').join('\n')}
+async function call(config){if(config.provider==='gemini')return callGemini(config);if(config.provider==='openai')return callOpenAICompatible(config);throw new Error('尚未設定 AI 服務商')}
+window.OCLifeAI={call,callGemini,callOpenAICompatible};
+})();
