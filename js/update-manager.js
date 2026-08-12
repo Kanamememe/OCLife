@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const CURRENT='20260812-3',KEY='oclife_update_settings_v1',ATTEMPT_KEY='oclife_update_attempt_v1';
+const CURRENT='20260812-4',KEY='oclife_update_settings_v1',ATTEMPT_KEY='oclife_update_attempt_v1';
 let checking=false,reloading=false,lastCheck=0;
 function settings(){try{return{auto:true,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(_){return{auto:true}}}
 function save(patch){localStorage.setItem(KEY,JSON.stringify({...settings(),...patch}))}
