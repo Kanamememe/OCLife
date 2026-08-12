@@ -1,5 +1,5 @@
 {
-  "version": "20260812-5",
-  "releasedAt": "2026-08-12T21:20:00+08:00",
-  "notes": "Owner-only announcement editor with GitHub-authorized publishing"
+  "version": "20260812-6",
+  "releasedAt": "2026-08-12T21:35:00+08:00",
+  "notes": "Shared Supabase announcement comments with anonymous names and nested replies"
 }
