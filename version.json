@@ -1,5 +1,5 @@
 {
-  "version": "20260813-3",
-  "releasedAt": "2026-08-13T00:34:00+08:00",
-  "notes": "Consolidate settings to one controller and remove recursive API runtime observer"
+  "version": "20260813-4",
+  "releasedAt": "2026-08-13T01:12:00+08:00",
+  "notes": "Move avatar images out of localStorage, distinguish API errors from Safari storage quota, and add storage diagnostics"
 }
