@@ -1,0 +1,15 @@
+(function(){
+'use strict';
+const VERSION='1.0.0',S=window.OCLifeStore;
+const $=s=>document.querySelector(s);
+function mask(key){key=String(key||'');if(!key)return'未設定';return `••••${key.slice(-6)}`}
+function current(){const s=S.data.settings||{};return{provider:s.provider||'none',baseUrl:s.baseUrl||'',apiKey:s.apiKey||'',model:s.model||''}}
+function selected(){return{provider:$('#apiProvider')?.value||'none',baseUrl:($('#apiBase')?.value||'').trim(),apiKey:($('#apiKey')?.value||'').trim(),model:(($('#apiModelManual')?.value)||($('#apiModelList')?.value)||'').trim()}}
+function saveSelected(){const x=selected();if(x.provider==='none'||!x.baseUrl||!x.apiKey||!x.model)return false;S.data.settings={...S.data.settings,...x};S.save();renderRuntime();return true}
+function label(x=current()){return`${x.provider||'none'} · ${x.model||'未選模型'} · Key ${mask(x.apiKey)}`}
+function renderRuntime(){const modal=document.querySelector('#modalRoot .modal'),status=$('#apiRuntimeActive');if(status)status.textContent=label();if(modal&&modal.querySelector('h2')?.textContent==='設定'&&!status){const anchor=$('#apiStatus');if(anchor){const d=document.createElement('div');d.id='apiRuntimeActive';d.className='note';d.style.cssText='margin-top:5px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.28)';d.textContent='目前實際使用：'+label();anchor.after(d)}}}
+function installTestAutosave(){document.addEventListener('click',e=>{const btn=e.target.closest?.('#testApi');if(!btn)return;const before=selected();let tries=0;const check=()=>{tries++;const txt=$('#apiStatus')?.textContent||'';if(/^✓\s*連線成功/.test(txt)){const now=selected();if(now.apiKey===before.apiKey&&saveSelected()){const el=$('#apiStatus');if(el)el.textContent=`✓ 連線成功並已設為目前 API · ${label(now)}`;window.OCLifeAutoLife?.toast?.('✓ 測試成功，已自動套用這組 API')}}else if(tries<24&&!/^測試失敗/.test(txt))setTimeout(check,150)};setTimeout(check,150)},true)}
+function installQuestionDiagnostics(){const obs=new MutationObserver(()=>{const st=document.getElementById('qbStatus');if(!st)return;if(st.dataset.apiDiagBound)return;st.dataset.apiDiagBound='1';new MutationObserver(()=>{const text=st.textContent||'';if(!/生成失敗|quota|額度|429/i.test(text)||st.querySelector?.('[data-api-diag]'))return;const x=current(),extra=document.createElement('div');extra.dataset.apiDiag='1';extra.style.cssText='margin-top:5px;font-size:10px;color:#6d82a0';extra.textContent=`實際使用：${label(x)} · ${x.baseUrl||'無 Base URL'}`;st.appendChild(extra)}).observe(st,{childList:true,subtree:true,characterData:true})});obs.observe(document.documentElement,{childList:true,subtree:true})}
+function install(){new MutationObserver(renderRuntime).observe(document.documentElement,{childList:true,subtree:true});renderRuntime();installTestAutosave();installQuestionDiagnostics()}
+window.OCLifeApiRuntime={version:VERSION,current,selected,saveSelected,mask,label};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',install,{once:true}):install();
+})();
