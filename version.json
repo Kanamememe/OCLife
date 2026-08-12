@@ -1,5 +1,5 @@
 {
-  "version": "20260813-4",
-  "releasedAt": "2026-08-13T01:12:00+08:00",
-  "notes": "Move avatar images out of localStorage, distinguish API errors from Safari storage quota, and add storage diagnostics"
+  "version": "20260813-5",
+  "releasedAt": "2026-08-13T04:10:00+08:00",
+  "notes": "Redesign moment replies in a compact WeChat-style panel and add per-world saved short-story library"
 }
