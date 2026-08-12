@@ -1,6 +1,15 @@
 {
-  "latest": "20260812-6",
+  "latest": "notice-20260812-2204",
   "announcements": [
+    {
+      "id": "notice-20260812-2204",
+      "type": "notice",
+      "version": "",
+      "date": "2026-08-12",
+      "title": "TEST",
+      "summary": "測試 測試\n試試新功能捏ʕ •ᴥ•ʔ",
+      "items": []
+    },
     {
       "version": "20260812-6",
       "date": "2026-08-12",
