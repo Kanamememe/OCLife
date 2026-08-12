@@ -1,5 +1,5 @@
 {
-  "version": "20260813-1",
-  "releasedAt": "2026-08-13T00:20:00+08:00",
-  "notes": "Fix Gemini text-model filtering, quota diagnostics, and recoverable settings entry"
+  "version": "20260813-2",
+  "releasedAt": "2026-08-13T00:26:00+08:00",
+  "notes": "Fix Safari freeze when opening settings and remove recursive settings observers"
 }
