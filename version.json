@@ -1,5 +1,5 @@
 {
-  "version": "20260812-6",
-  "releasedAt": "2026-08-12T21:35:00+08:00",
-  "notes": "Shared Supabase announcement comments with anonymous names and nested replies"
+  "version": "20260812-7",
+  "releasedAt": "2026-08-12T23:58:00+08:00",
+  "notes": "Auto-activate tested API settings and show safe active-key diagnostics"
 }
