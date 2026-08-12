@@ -1,5 +1,5 @@
 {
-  "version": "20260812-2",
-  "releasedAt": "2026-08-12T13:00:00+08:00",
-  "notes": "World question box, pair and single targets, and forced automatic updates"
+  "version": "20260812-3",
+  "releasedAt": "2026-08-12T14:00:00+08:00",
+  "notes": "Restore API save controls, saved profiles, model loading, and provider Base URL auto-fill"
 }
