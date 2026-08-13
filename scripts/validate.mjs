@@ -25,8 +25,8 @@ assert(new Set(assets.map(cleanAsset)).size===assets.length,'index.html contains
 
 const requiredScripts=[
   'js/store.js','js/ai.js','js/app-v2.js','js/provider-settings-v3.js','js/shared-worlds.js',
-  'js/mobile-home-network.js','js/writing-studio.js','js/if-studio.js','js/moment-threads-v1.js',
-  'js/question-box.js','js/module-health.js'
+  'js/shared-worlds-integrity.js','js/mobile-home-network.js','js/writing-studio.js','js/if-studio.js',
+  'js/moment-threads-v1.js','js/question-box.js','js/module-health.js'
 ];
 for(const file of requiredScripts)assert(index.includes(`src="${file}?v=${version}"`),`required script not loaded with current version: ${file}`);
 
@@ -41,7 +41,7 @@ assert(String(announcements.latest||'')===version,`announcements.latest ${announ
 assert((announcements.announcements||[]).some(x=>String(x.id||x.version||'')===version),`announcements missing ${version} entry`);
 
 const health=read('js/module-health.js');
-for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWritingStudio','OCLifeIFStudio','OCLifeQuestionBox','OCLifeSharedWorlds'])assert(health.includes(key),`module health does not check ${key}`);
+for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWritingStudio','OCLifeIFStudio','OCLifeQuestionBox','OCLifeSharedWorlds','OCLifeSharedIntegrity'])assert(health.includes(key),`module health does not check ${key}`);
 
 assert(exists('supabase/shared-worlds.sql'),'shared-worlds base SQL is missing');
 assert(exists('supabase/shared-worlds-security-fix.sql'),'shared-worlds security SQL is missing');
