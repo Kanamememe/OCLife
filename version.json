@@ -1,5 +1,5 @@
 {
-  "version": "20260813-6",
-  "releasedAt": "2026-08-13T12:52:00+08:00",
-  "notes": "Rebuild writing studio, restore saved writing library, verify WeChat moment UI loading, and add startup module health diagnostics"
+  "version": "20260813-7",
+  "releasedAt": "2026-08-13T13:10:00+08:00",
+  "notes": "Reject empty AI responses, expose finish reasons, and stop writing studio from reporting blank output as successful generation"
 }
