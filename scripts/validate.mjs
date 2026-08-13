@@ -45,14 +45,18 @@ for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWriti
 
 assert(exists('supabase/shared-worlds.sql'),'shared-worlds base SQL is missing');
 assert(exists('supabase/shared-worlds-security-fix.sql'),'shared-worlds security SQL is missing');
+const baseSql=read('supabase/shared-worlds.sql');
+for(const fn of ['oclife_shared_health','oclife_shared_create_world','oclife_shared_join_world','oclife_shared_pull','oclife_shared_push','oclife_shared_leave_world','oclife_shared_delete_world'])assert(baseSql.includes(`function public.${fn}`),`shared-worlds SQL missing RPC: ${fn}`);
+assert(!/service_role|sb_secret_/i.test(index+baseSql),'front-end or shared SQL mentions a server secret key');
 
 const textFiles=[];
 function walk(dir){for(const name of fs.readdirSync(path.join(root,dir))){const rel=path.join(dir,name);const stat=fs.statSync(path.join(root,rel));if(stat.isDirectory())walk(rel);else if(/\.(js|mjs|html|css|json|sql|md|yml|yaml)$/i.test(name))textFiles.push(rel)}}
 for(const dir of ['js','css','scripts','supabase','.github'])if(exists(dir))walk(dir);
 textFiles.push('index.html','version.json','announcements.json');
+const unresolvedMarkers=['<'+'sha>','<'+'content>','... ('+'truncated)'];
 for(const file of [...new Set(textFiles)]){
   const text=read(file);
-  assert(!text.includes('<sha>')&&!text.includes('<content>')&&!text.includes('... (truncated)'),`${file} contains an unresolved placeholder/truncation marker`);
+  assert(!unresolvedMarkers.some(marker=>text.includes(marker)),`${file} contains an unresolved placeholder/truncation marker`);
 }
 
 if(fail.length){
