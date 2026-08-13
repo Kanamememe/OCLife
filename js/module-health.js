@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='2.0.0';
+const VERSION='2.1.0';
 const REQUIRED=[
  ['資料庫','OCLifeStore',['all','get','add','update','remove','save']],
  ['AI','OCLifeAI',['call','listModels']],
@@ -15,6 +15,7 @@ const REQUIRED=[
  ['朋友圈介面','OCLifeMomentWeChatUI',['render']],
  ['提問箱','OCLifeQuestionBox',['open']],
  ['共享世界','OCLifeSharedWorlds',['openJoin','openManager','syncWorld']],
+ ['共享完整性','OCLifeSharedIntegrity',['take','restoreWorld','copyPrivate']],
  ['公告','OCLifeAnnouncements',['open']],
  ['公告評論','OCLifeAnnouncementComments',['mountAll']]
 ];
