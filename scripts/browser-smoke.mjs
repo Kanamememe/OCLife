@@ -32,8 +32,8 @@ await page.addInitScript(()=>{
 });
 await page.route('https://ngkcxzsjhftsfalpqjuu.supabase.co/**',async route=>{
  const url=route.request().url();
- if(url.includes('/rpc/oclife_shared_health'))await route.fulfill({status:404,contentType:'application/json',body:JSON.stringify({code:'PGRST202',message:'Could not find the function'})});
- else await route.fulfill({status:200,contentType:'application/json',body:'[]'});
+ const body=url.includes('/rpc/oclife_shared_health')?JSON.stringify({ok:true,schema_version:1}):'[]';
+ await route.fulfill({status:200,contentType:'application/json',body});
 });
 try{
  await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle'});
@@ -60,7 +60,9 @@ try{
  await page.evaluate(id=>OCLifePhone.openHome(id),worldId);await page.waitForSelector('[data-oc-question-box]');await page.locator('[data-oc-question-box] button').click();
  await page.locator('#qbQuestion').fill('你們現在心情如何？');await page.locator('#qbAsk').click();await page.waitForFunction(()=>document.getElementById('qbHistory')?.textContent?.includes('甲的回答'));await page.locator('#qbClose').click();
  await page.locator('#settingsBtn').click();await page.waitForSelector('#apiProvider');assert.equal(await page.locator('#modalRoot h2').textContent(),'設定');await page.locator('#apiCancel').click();
- await page.evaluate(id=>OCLifePhone.openHome(id),worldId);await page.waitForSelector('[data-oc-shared-app]');await page.locator('[data-oc-shared-app] button').click();await page.waitForFunction(()=>document.getElementById('modalRoot')?.textContent?.includes('初始化共享世界'));await page.locator('.oc-shared-close').click();
+ await page.evaluate(id=>OCLifePhone.openHome(id),worldId);await page.waitForSelector('[data-oc-shared-app]');await page.locator('[data-oc-shared-app] button').click();
+ await page.waitForFunction(()=>document.getElementById('modalRoot')?.textContent?.includes('建立共享世界'));await page.locator('.oc-shared-close').click();
+ await page.evaluate(()=>OCLifeSharedWorlds.openSetup('smoke test'));await page.waitForFunction(()=>document.getElementById('modalRoot')?.textContent?.includes('初始化共享世界'));await page.locator('.oc-shared-close').click();
  const health=await page.evaluate(()=>OCLifeHealth.check());assert.equal(health.ok,true,health.missing?.join(', '));assert.deepEqual(pageErrors,[]);
  console.log('WebKit smoke test passed.');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
