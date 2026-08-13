@@ -1,5 +1,5 @@
 {
-  "version": "20260813-5",
-  "releasedAt": "2026-08-13T04:10:00+08:00",
-  "notes": "Redesign moment replies in a compact WeChat-style panel and add per-world saved short-story library"
+  "version": "20260813-6",
+  "releasedAt": "2026-08-13T12:52:00+08:00",
+  "notes": "Rebuild writing studio, restore saved writing library, verify WeChat moment UI loading, and add startup module health diagnostics"
 }
