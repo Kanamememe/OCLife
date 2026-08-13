@@ -1,5 +1,5 @@
 {
-  "version": "20260813-7",
-  "releasedAt": "2026-08-13T13:10:00+08:00",
-  "notes": "Reject empty AI responses, expose finish reasons, and stop writing studio from reporting blank output as successful generation"
+  "version": "20260813-8",
+  "releasedAt": "2026-08-13T19:35:00+08:00",
+  "notes": "Add opt-in shared worlds with member ownership, secure Supabase RPC sync, invite links, offline queueing, private copies, and release-wide validation"
 }
