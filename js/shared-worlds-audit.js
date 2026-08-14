@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 
-const VERSION='1.1.0';
+const VERSION='1.2.0';
 const EXPECTED_SCHEMA=2;
 const EXPECTED_SECURITY=2;
 const SUPABASE_HOST='ngkcxzsjhftsfalpqjuu.supabase.co';
@@ -14,6 +14,7 @@ const forceReplay=new Set();
 const allowLocalDelete=new Set();
 let syncTimer=0;
 let avatarNoticeAt=0;
+let repairNoticeAt=0;
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const toast=(text,opts={})=>window.OCLifeAutoLife?.toast?.(text,opts)||console.warn('[OC Life shared audit]',text);
@@ -40,6 +41,12 @@ function authOrMissing(data,status){
  const text=errorText(data);
  return status===401||/憑證無效|成員已被移除|共享世界不存在|共享世界.*已刪除|成員憑證/i.test(text)
 }
+function tokenHashCompatibility(data){
+ const text=errorText(data);
+ return /function\s+(?:(?:[a-z0-9_]+)\.)?digest\(text,\s*unknown\)\s+does not exist/i.test(text)
+  || /oclife_shared_token_hash[\s\S]{0,180}(?:digest|sha256)[\s\S]{0,80}does not exist/i.test(text)
+}
+function openRepairSetup(message){const now=Date.now();if(now-repairNoticeAt<1500)return;repairNoticeAt=now;setTimeout(()=>window.OCLifeSharedWorlds?.openSetup?.(message),0)}
 function noticeOnce(text){const now=Date.now();if(now-avatarNoticeAt<3000)return;avatarNoticeAt=now;toast(text,{error:true})}
 function sanitizePayload(value,state,depth=0){
  if(depth>18)return null;
@@ -73,6 +80,17 @@ async function handleHealth(input,init){
  const schema=Number(data?.schema_version||0),security=Number(data?.security_revision||0);
  if(schema<EXPECTED_SCHEMA||security<EXPECTED_SECURITY){
   return jsonResponse({code:'PGRST202',message:`共享世界資料庫需要升級（目前 schema ${schema||'未知'}，需要 ${EXPECTED_SCHEMA}）`,details:'請在共享世界初始化介面重新複製並執行完整 SQL。'},404);
+ }
+ return response;
+}
+async function handleCreateOrJoin(input,init){
+ const response=await baseFetch(input,init);
+ if(response.ok)return response;
+ const data=await responseData(response);
+ if(tokenHashCompatibility(data)){
+  const message='共享世界資料庫的 token hash 函式需要修復。請重新複製並執行最新版完整 SQL。';
+  openRepairSetup(message);
+  return jsonResponse({...data,code:'PGRST202',message,details:'Supabase pgcrypto schema compatibility repair required.'},404);
  }
  return response;
 }
@@ -135,6 +153,7 @@ window.fetch=async function(input,init={}){
  const meta=requestMeta(input,init);
  if(!meta)return baseFetch(input,init);
  if(meta.name==='oclife_shared_health')return handleHealth(input,init);
+ if(meta.name==='oclife_shared_create_world'||meta.name==='oclife_shared_join_world')return handleCreateOrJoin(input,init);
  if(meta.name==='oclife_shared_push')return handlePush(input,init,meta);
  if(meta.name==='oclife_shared_pull')return handlePull(input,init,meta);
  if(meta.name==='oclife_shared_leave_world'||meta.name==='oclife_shared_delete_world')return handleExit(input,init,meta);
