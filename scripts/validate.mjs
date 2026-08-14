@@ -25,7 +25,7 @@ assert(new Set(assets.map(cleanAsset)).size===assets.length,'index.html contains
 
 const requiredScripts=[
   'js/store.js','js/ai.js','js/app-v2.js','js/provider-settings-v3.js','js/shared-worlds.js',
-  'js/shared-worlds-integrity.js','js/mobile-home-network.js','js/writing-studio.js','js/if-studio.js',
+  'js/shared-worlds-audit.js','js/shared-worlds-integrity.js','js/mobile-home-network.js','js/writing-studio.js','js/if-studio.js',
   'js/moment-threads-v1.js','js/question-box.js','js/module-health.js'
 ];
 for(const file of requiredScripts)assert(index.includes(`src="${file}?v=${version}"`),`required script not loaded with current version: ${file}`);
@@ -41,13 +41,24 @@ assert(String(announcements.latest||'')===version,`announcements.latest ${announ
 assert((announcements.announcements||[]).some(x=>String(x.id||x.version||'')===version),`announcements missing ${version} entry`);
 
 const health=read('js/module-health.js');
-for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWritingStudio','OCLifeIFStudio','OCLifeQuestionBox','OCLifeSharedWorlds','OCLifeSharedIntegrity'])assert(health.includes(key),`module health does not check ${key}`);
+for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWritingStudio','OCLifeIFStudio','OCLifeQuestionBox','OCLifeSharedWorlds','OCLifeSharedAudit','OCLifeSharedIntegrity'])assert(health.includes(key),`module health does not check ${key}`);
 
-assert(exists('supabase/shared-worlds.sql'),'shared-worlds base SQL is missing');
-assert(exists('supabase/shared-worlds-security-fix.sql'),'shared-worlds security SQL is missing');
+for(const file of ['supabase/shared-worlds.sql','supabase/shared-worlds-security-fix.sql','supabase/shared-worlds-v2.sql'])assert(exists(file),`${file} is missing`);
 const baseSql=read('supabase/shared-worlds.sql');
 for(const fn of ['oclife_shared_health','oclife_shared_create_world','oclife_shared_join_world','oclife_shared_pull','oclife_shared_push','oclife_shared_leave_world','oclife_shared_delete_world'])assert(baseSql.includes(`function public.${fn}`),`shared-worlds SQL missing RPC: ${fn}`);
-assert(!/service_role|sb_secret_/i.test(index+baseSql),'front-end or shared SQL mentions a server secret key');
+const v2Sql=read('supabase/shared-worlds-v2.sql');
+assert(v2Sql.includes("'schema_version', 2"),'shared-worlds v2 health schema is missing');
+assert(v2Sql.includes("'security_revision', 2"),'shared-worlds v2 security revision is missing');
+assert(v2Sql.includes('jsonb_array_length')&&v2Sql.includes('> 25'),'shared-worlds v2 push size limit is missing');
+const setupFix=read('js/shared-worlds-setup-fix.js');
+assert(setupFix.includes('shared-worlds-v2.sql'),'shared setup does not include v2 migration');
+const audit=read('js/shared-worlds-audit.js');
+for(const marker of ['EXPECTED_SCHEMA=2','handlePush','forceReplay','pendingCount','patchStorePermissions'])assert(audit.includes(marker),`shared audit missing ${marker}`);
+assert(!/service_role|sb_secret_/i.test(index+baseSql+v2Sql+audit),'front-end or shared SQL mentions a server secret key');
+
+for(const file of ['scripts/browser-smoke.mjs','scripts/shared-world-smoke.mjs'])assert(exists(file),`${file} is missing`);
+const sharedSmoke=read('scripts/shared-world-smoke.mjs');
+for(const phrase of ['two-client','transient failure lost pending operation','owner did not receive enabled thread state','leave did not clear pending queue'])assert(sharedSmoke.includes(phrase),`shared smoke test is missing: ${phrase}`);
 
 const textFiles=[];
 function walk(dir){for(const name of fs.readdirSync(path.join(root,dir))){const rel=path.join(dir,name);const stat=fs.statSync(path.join(root,rel));if(stat.isDirectory())walk(rel);else if(/\.(js|mjs|html|css|json|sql|md|yml|yaml)$/i.test(name))textFiles.push(rel)}}
