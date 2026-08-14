@@ -27,3 +27,5 @@ begin
   end if;
 end;
 $$;
+
+reset search_path;
