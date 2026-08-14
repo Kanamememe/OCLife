@@ -2,7 +2,7 @@ name: Check frontend
 
 on:
   push:
-    branches: [main, feature/**, audit/**]
+    branches: [main, feature/**, audit/**, hotfix/**]
   pull_request:
 
 permissions:
@@ -30,6 +30,33 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('announcements.json','utf8'))"
       - name: Release consistency and asset references
         run: node scripts/validate.mjs
+
+  postgres-smoke:
+    needs: validate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oclife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oclife"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Shared-world SQL installer smoke test
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -d oclife -f scripts/shared-sql-smoke.sql
 
   webkit-smoke:
     needs: validate
