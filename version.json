@@ -1,5 +1,5 @@
 {
-  "version": "20260814-1",
-  "releasedAt": "2026-08-14T12:25:00+08:00",
-  "notes": "Harden shared-world permissions and offline queue recovery, require Supabase schema/security revision 2, preserve delayed comments for member-created moments, and add two-client WebKit regression tests"
+  "version": "20260814-2",
+  "releasedAt": "2026-08-14T13:40:00+08:00",
+  "notes": "Fix shared-world creation on Supabase projects where pgcrypto is installed outside the public search path, add a schema-independent token hash repair, and run the full installer against PostgreSQL 15 in CI"
 }

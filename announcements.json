@@ -1,6 +1,21 @@
 {
-  "latest": "20260814-1",
+  "latest": "20260814-2",
   "announcements": [
+    {
+      "id": "20260814-2",
+      "type": "update",
+      "version": "20260814-2",
+      "date": "2026-08-14",
+      "title": "共享世界建立失敗修復",
+      "summary": "修正 Supabase 將 pgcrypto 安裝在 extensions schema 時，建立共享世界出現「function digest(text, unknown) does not exist」的問題。",
+      "items": [
+        "共享成員憑證的雜湊改用 PostgreSQL 內建 SHA-256，不再依賴 pgcrypto 是否位於目前 search_path。",
+        "完整 SQL 安裝器新增 token hash 修復，會在 schema/security v2 後自動套用並立即執行已知雜湊自我測試。",
+        "已執行舊版 SQL 的專案只需重新執行最新版完整 SQL；私人世界、角色、聊天與其他本機資料不會被清除。",
+        "建立或加入共享世界若偵測到舊版 digest 錯誤，介面會自動開啟資料庫修復步驟，不再只顯示 PostgreSQL 原始錯誤。",
+        "GitHub Actions 新增真正的 PostgreSQL 15 測試資料庫，將 pgcrypto 安裝在 extensions schema 後完整執行所有 SQL，並實際呼叫建立共享世界 RPC。"
+      ]
+    },
     {
       "id": "20260814-1",
       "type": "update",
