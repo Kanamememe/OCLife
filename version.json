@@ -1,5 +1,5 @@
 {
-  "version": "20260813-8",
-  "releasedAt": "2026-08-13T19:35:00+08:00",
-  "notes": "Add opt-in shared worlds with member ownership, secure Supabase RPC sync, invite links, offline queueing, private copies, and release-wide validation"
+  "version": "20260814-1",
+  "releasedAt": "2026-08-14T12:25:00+08:00",
+  "notes": "Harden shared-world permissions and offline queue recovery, require Supabase schema/security revision 2, preserve delayed comments for member-created moments, and add two-client WebKit regression tests"
 }
