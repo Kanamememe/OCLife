@@ -5,6 +5,7 @@ create role authenticated nologin;
 create schema extensions;
 create extension pgcrypto with schema extensions;
 
+\ir ../supabase/shared-worlds-bootstrap.sql
 \ir ../supabase/shared-worlds.sql
 \ir ../supabase/shared-worlds-security-fix.sql
 \ir ../supabase/shared-worlds-v2.sql
