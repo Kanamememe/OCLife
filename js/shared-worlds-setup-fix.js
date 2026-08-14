@@ -1,7 +1,8 @@
 (function(){
 'use strict';
-const VERSION='1.2.0';
+const VERSION='1.3.0';
 const FILES=[
+ './supabase/shared-worlds-bootstrap.sql',
  './supabase/shared-worlds.sql',
  './supabase/shared-worlds-security-fix.sql',
  './supabase/shared-worlds-v2.sql',
@@ -14,7 +15,7 @@ async function copyCompleteInstaller(button){
  try{
   if(status)status.textContent='正在準備完整 SQL…';
   const sql=await completeSQL();
-  try{await navigator.clipboard.writeText(sql);if(status)status.textContent='✓ 完整 SQL 已複製（包含 schema/security v2 與 token hash 修復）'}
+  try{await navigator.clipboard.writeText(sql);if(status)status.textContent='✓ 完整 SQL 已複製（包含 Supabase schema bootstrap、security v2 與 token hash 修復）'}
   catch(_){downloadSQL(sql);if(status)status.textContent='無法直接複製，已下載完整 SQL 檔案'}
  }catch(error){if(status)status.textContent='準備失敗：'+(error?.message||error)}
 }
