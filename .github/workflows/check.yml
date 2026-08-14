@@ -2,7 +2,7 @@ name: Check frontend
 
 on:
   push:
-    branches: [main, feature/**]
+    branches: [main, feature/**, audit/**]
   pull_request:
 
 permissions:
@@ -43,5 +43,7 @@ jobs:
           node-version: '22'
       - name: Install matching Playwright client
         run: npm install --no-save --no-audit --no-fund playwright@1.55.0
-      - name: WebKit browser smoke test
+      - name: Core WebKit browser smoke test
         run: node scripts/browser-smoke.mjs
+      - name: Shared-world two-client WebKit smoke test
+        run: node scripts/shared-world-smoke.mjs
