@@ -44,12 +44,15 @@ const health=read('js/module-health.js');
 for(const key of ['OCLifeStore','OCLifeAI','OCLifeProviderSettings','OCLifeWritingStudio','OCLifeIFStudio','OCLifeQuestionBox','OCLifeSharedWorlds','OCLifeSharedAudit','OCLifeSharedIntegrity'])assert(health.includes(key),`module health does not check ${key}`);
 
 const sqlFiles=[
+  'supabase/shared-worlds-bootstrap.sql',
   'supabase/shared-worlds.sql',
   'supabase/shared-worlds-security-fix.sql',
   'supabase/shared-worlds-v2.sql',
   'supabase/shared-worlds-token-hash-fix.sql'
 ];
 for(const file of sqlFiles)assert(exists(file),`${file} is missing`);
+const bootstrapSql=read('supabase/shared-worlds-bootstrap.sql');
+assert(bootstrapSql.includes('set search_path = pg_catalog, extensions, public, pg_temp'),'shared installer bootstrap does not expose the Supabase extensions schema');
 const baseSql=read('supabase/shared-worlds.sql');
 for(const fn of ['oclife_shared_health','oclife_shared_create_world','oclife_shared_join_world','oclife_shared_pull','oclife_shared_push','oclife_shared_leave_world','oclife_shared_delete_world'])assert(baseSql.includes(`function public.${fn}`),`shared-worlds SQL missing RPC: ${fn}`);
 const v2Sql=read('supabase/shared-worlds-v2.sql');
@@ -62,18 +65,20 @@ assert(tokenHashFix.includes('pg_catalog.sha256')&&tokenHashFix.includes('pg_cat
 assert(tokenHashFix.includes('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'),'token hash installer self-test is missing');
 assert(!/\bdigest\s*\(/i.test(tokenHashFix),'token hash fix must not depend on pgcrypto digest search_path');
 const setupFix=read('js/shared-worlds-setup-fix.js');
+assert(setupFix.includes('shared-worlds-bootstrap.sql'),'shared setup does not include schema bootstrap');
 assert(setupFix.includes('shared-worlds-v2.sql'),'shared setup does not include v2 migration');
 assert(setupFix.includes('shared-worlds-token-hash-fix.sql'),'shared setup does not include token hash repair');
+assert(setupFix.indexOf('shared-worlds-bootstrap.sql')<setupFix.indexOf('shared-worlds.sql'),'schema bootstrap must run before base shared SQL');
 assert(setupFix.indexOf('shared-worlds-v2.sql')<setupFix.indexOf('shared-worlds-token-hash-fix.sql'),'token hash repair must run after v2 migration');
 const audit=read('js/shared-worlds-audit.js');
 for(const marker of ['EXPECTED_SCHEMA=2','handlePush','forceReplay','pendingCount','patchStorePermissions','tokenHashCompatibility','handleCreateOrJoin'])assert(audit.includes(marker),`shared audit missing ${marker}`);
-assert(!/service_role|sb_secret_/i.test(index+baseSql+v2Sql+tokenHashFix+audit),'front-end or shared SQL mentions a server secret key');
+assert(!/service_role|sb_secret_/i.test(index+bootstrapSql+baseSql+v2Sql+tokenHashFix+audit),'front-end or shared SQL mentions a server secret key');
 
 for(const file of ['scripts/browser-smoke.mjs','scripts/shared-world-smoke.mjs','scripts/shared-sql-smoke.sql'])assert(exists(file),`${file} is missing`);
 const sharedSmoke=read('scripts/shared-world-smoke.mjs');
 for(const phrase of ['two-client','transient failure lost pending operation','owner did not receive enabled thread state','leave did not clear pending queue'])assert(sharedSmoke.includes(phrase),`shared smoke test is missing: ${phrase}`);
 const sqlSmoke=read('scripts/shared-sql-smoke.sql');
-for(const phrase of ['create extension pgcrypto with schema extensions','shared-worlds-token-hash-fix.sql','oclife_shared_token_hash','oclife_shared_create_world','Shared SQL smoke test passed.'])assert(sqlSmoke.includes(phrase),`shared SQL smoke test is missing: ${phrase}`);
+for(const phrase of ['create extension pgcrypto with schema extensions','shared-worlds-bootstrap.sql','shared-worlds-token-hash-fix.sql','oclife_shared_token_hash','oclife_shared_create_world','Shared SQL smoke test passed.'])assert(sqlSmoke.includes(phrase),`shared SQL smoke test is missing: ${phrase}`);
 
 const textFiles=[];
 function walk(dir){for(const name of fs.readdirSync(path.join(root,dir))){const rel=path.join(dir,name);const stat=fs.statSync(path.join(root,rel));if(stat.isDirectory())walk(rel);else if(/\.(js|mjs|html|css|json|sql|md|yml|yaml)$/i.test(name))textFiles.push(rel)}}
