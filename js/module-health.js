@@ -1,11 +1,12 @@
 (function(){
 'use strict';
-const VERSION='2.2.0';
+const VERSION='2.3.0';
 const REQUIRED=[
  ['資料庫','OCLifeStore',['all','get','add','update','remove','save']],
  ['AI','OCLifeAI',['call','listModels']],
  ['主程式','OCLifePhone',['openHome']],
  ['世界狀態','OCLifeWorldContext',['get','set','clear']],
+ ['世界資料編輯','OCLifeWorldEditor',['open','decorate','canEdit']],
  ['設定','OCLifeProviderSettings',['open']],
  ['角色編輯','OCLifeCharacterEditor',['edit','delete']],
  ['寫作','OCLifeWritingStudio',['open','library']],
