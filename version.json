@@ -1,5 +1,5 @@
 {
-  "version": "20260814-2",
-  "releasedAt": "2026-08-14T13:40:00+08:00",
-  "notes": "Fix shared-world creation on Supabase projects where pgcrypto is installed outside the public search path, add a schema-independent token hash repair, and run the full installer against PostgreSQL 15 in CI"
+  "version": "20260815-1",
+  "releasedAt": "2026-08-15T21:01:00+08:00",
+  "notes": "Add full world-data editing for private worlds and shared-world owners, preserve the current world after saving, and add WebKit regression coverage for permissions and synchronization behavior"
 }
