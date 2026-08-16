@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const VERSION='1.1.0',S=window.OCLifeStore;
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function style(){if(document.getElementById('oc-wechat-moment-style'))return;const s=document.createElement('style');s.id='oc-wechat-moment-style';s.textContent=`
 .moment-card .oc-thread-comments{margin:10px 0 0!important;padding:0!important;border:0!important;display:block!important;background:rgba(45,78,116,.075);border-radius:12px;overflow:hidden;position:relative}
 .moment-card .oc-thread-comments:before{content:'';position:absolute;top:-7px;left:24px;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:8px solid rgba(45,78,116,.075)}
