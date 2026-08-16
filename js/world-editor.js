@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 
-const VERSION='1.0.0';
+const VERSION='1.0.1';
 const S=window.OCLifeStore;
 if(!S)return;
 
@@ -79,7 +79,7 @@ function open(worldId){
    button.disabled=false;status.textContent='儲存失敗：'+(error?.message||error);
   }
  };
- setTimeout(()=>modalRoot.querySelector('#worldEditName')?.focus(),50);
+ modalRoot.querySelector('#worldEditName')?.focus();
 }
 function insertInfoRow(list,id,label,value,before){
  let term=list.querySelector(`#${id}Term`),description=list.querySelector(`#${id}Value`);
