@@ -74,5 +74,7 @@ jobs:
         run: node scripts/browser-smoke.mjs
       - name: World data editor WebKit smoke test
         run: node scripts/world-editor-smoke.mjs
+      - name: Moment reply binding WebKit smoke test
+        run: node scripts/moment-reply-smoke.mjs
       - name: Shared-world two-client WebKit smoke test
         run: node scripts/shared-world-smoke.mjs
