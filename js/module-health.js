@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='2.3.0';
+const VERSION='2.4.0';
 const REQUIRED=[
  ['資料庫','OCLifeStore',['all','get','add','update','remove','save']],
  ['AI','OCLifeAI',['call','listModels']],
@@ -14,6 +14,7 @@ const REQUIRED=[
  ['事件簿','OCLifeEvents',['open','createEvent']],
  ['動態留言','OCLifeMomentThreads',['openComposer','renderAll']],
  ['朋友圈介面','OCLifeMomentWeChatUI',['render']],
+ ['圖片動態','OCLifePhotoMoments',['openLibrary','openPost','visibleFor','render']],
  ['提問箱','OCLifeQuestionBox',['open']],
  ['共享世界','OCLifeSharedWorlds',['openJoin','openManager','syncWorld']],
  ['共享安全層','OCLifeSharedAudit',['pendingCount','clearPending']],
