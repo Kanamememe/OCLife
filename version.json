@@ -1,5 +1,5 @@
 {
-  "version": "20260815-1",
-  "releasedAt": "2026-08-15T21:01:00+08:00",
-  "notes": "Add full world-data editing for private worlds and shared-world owners, preserve the current world after saving, and add WebKit regression coverage for permissions and synchronization behavior"
+  "version": "20260816-1",
+  "releasedAt": "2026-08-16T23:58:00+09:00",
+  "notes": "Add a global photo library for image moments, EXIF GPS reading, manual location fallback, AI character selection/captioning, and per-photo world visibility or exclusions"
 }
