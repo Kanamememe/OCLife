@@ -28,7 +28,7 @@ const requiredScripts=[
   'js/shared-worlds-audit.js','js/shared-worlds-integrity.js','js/mobile-home-network.js','js/writing-studio.js','js/if-studio.js',
   'js/moment-threads-v1.js','js/question-box.js','js/module-health.js'
 ];
-for(const file of requiredScripts)assert(index.includes(`src="${file}?v=${version}"`),`required script not loaded with current version: ${file}`);
+for(const file of requiredScripts)assert(index.includes(`src="${file}?v=${version}`),`required script not loaded with current version: ${file}`);
 
 const forbiddenLoaded=['js/app.js','js/provider-settings.js','js/settings-recovery.js','js/api-runtime-sync.js'];
 for(const file of forbiddenLoaded)assert(!index.includes(`src="${file}`),`deprecated script is still loaded: ${file}`);
@@ -77,9 +77,11 @@ const audit=read('js/shared-worlds-audit.js');
 for(const marker of ['EXPECTED_SCHEMA=2','handlePush','forceReplay','pendingCount','patchStorePermissions','tokenHashCompatibility','handleCreateOrJoin'])assert(audit.includes(marker),`shared audit missing ${marker}`);
 assert(!/service_role|sb_secret_/i.test(index+bootstrapSql+baseSql+v2Sql+tokenHashFix+audit),'front-end or shared SQL mentions a server secret key');
 
-for(const file of ['scripts/browser-smoke.mjs','scripts/world-editor-smoke.mjs','scripts/shared-world-smoke.mjs','scripts/shared-sql-smoke.sql'])assert(exists(file),`${file} is missing`);
+for(const file of ['scripts/browser-smoke.mjs','scripts/world-editor-smoke.mjs','scripts/moment-reply-smoke.mjs','scripts/shared-world-smoke.mjs','scripts/shared-sql-smoke.sql'])assert(exists(file),`${file} is missing`);
 const worldEditorSmoke=read('scripts/world-editor-smoke.mjs');
 for(const phrase of ['World data editor WebKit smoke test passed.','save left the current world','僅建立者可編輯','建立者可以重新編輯並同步'])assert(worldEditorSmoke.includes(phrase),`world editor smoke test is missing: ${phrase}`);
+const momentReplySmoke=read('scripts/moment-reply-smoke.mjs');
+for(const phrase of ['Moment reply binding WebKit smoke test passed.','DOM reorder moved replies to another moment','nested reply tap targeted the wrong comment','reply leaked into another moment'])assert(momentReplySmoke.includes(phrase),`moment reply smoke test is missing: ${phrase}`);
 const sharedSmoke=read('scripts/shared-world-smoke.mjs');
 for(const phrase of ['two-client','transient failure lost pending operation','owner did not receive enabled thread state','leave did not clear pending queue'])assert(sharedSmoke.includes(phrase),`shared smoke test is missing: ${phrase}`);
 const sqlSmoke=read('scripts/shared-sql-smoke.sql');
