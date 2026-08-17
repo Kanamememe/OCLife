@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {webkit} from 'playwright';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8'};
+const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname),rel=pathname==='/'?'index.html':pathname.replace(/^\/+/,''),file=path.resolve(root,rel);if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);res.end('Not found');return}res.writeHead(200,{'Content-Type':mime[path.extname(file).toLowerCase()]||'application/octet-stream','Cache-Control':'no-store'});fs.createReadStream(file).pipe(res)});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const {port}=server.address(),browser=await webkit.launch({headless:true}),page=await browser.newPage();
+await page.addInitScript(()=>{localStorage.setItem('oclife_boot_animation_v1','0');localStorage.setItem('oclife_onboarding_v1','done');localStorage.setItem('oclife_announcement_settings_v1',JSON.stringify({mode:'never'}));localStorage.setItem('oclife_update_settings_v1',JSON.stringify({auto:false}));localStorage.setItem('oclife_auto_life_settings',JSON.stringify({enabled:false,toast:false}));localStorage.setItem('oclife_moment_threads_v1',JSON.stringify({enabled:false}))});
+await page.route('https://ngkcxzsjhftsfalpqjuu.supabase.co/**',async route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
+try{
+ await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle'});
+ await page.waitForFunction(()=>window.OCLifePhotoMoments?.version&&window.OCLifePhotoMultiUpload?.processFiles);
+ await page.evaluate(()=>{const w1=OCLifeStore.createWorld({name:'世界甲'}),w2=OCLifeStore.createWorld({name:'世界乙'});OCLifeApp.openWorld(w1.id,'moments',true);window.__w2=w2.id});
+ await page.waitForSelector('#photoMomentOpen');await page.click('#photoMomentOpen');await page.waitForFunction(()=>document.getElementById('photoUpload')?.dataset.multiUpload==='1');
+ assert.match(await page.locator('#photoUpload').textContent(),/多選上傳照片/);
+ await page.evaluate(async()=>{const bytes=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0]);const files=['a.png','b.png','c.png'].map(name=>new File([bytes],name,{type:'image/png'}));await OCLifePhotoMultiUpload.processFiles(files)});
+ await page.waitForSelector('#batchApply');
+ assert.match(await page.locator('#modalRoot h2').textContent(),/3 張照片已加入/);
+ await page.selectOption('#batchVis','exclude');const w2=await page.evaluate(()=>window.__w2);const worldBox=page.locator(`[data-batch-world][value="${w2}"]`);await worldBox.waitFor({state:'attached'});await worldBox.check();await page.click('#batchApply');
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('oclife_photo_library_meta_v1')||'[]').length===3);
+ const result=await page.evaluate(()=>({data:JSON.parse(localStorage.getItem('oclife_photo_library_meta_v1')),w2:window.__w2}));
+ assert.equal(result.data.length,3);assert.deepEqual(result.data.map(x=>x.name).sort(),['a.png','b.png','c.png']);assert.ok(result.data.every(x=>x.visibilityMode==='exclude'));assert.ok(result.data.every(x=>x.worldIds.includes(result.w2)));
+ const stored=await page.evaluate(async()=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('oclife_photo_library_v1',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});const count=await new Promise((resolve,reject)=>{const r=db.transaction('photos','readonly').objectStore('photos').count();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});db.close();return count});
+ assert.equal(stored,3,'not every selected photo was persisted to IndexedDB');
+ console.log('Photo multi-upload WebKit smoke test passed.');
+}finally{await browser.close();await new Promise(r=>server.close(r))}

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='1.0.0';
+const VERSION='1.1.0';
 const S=window.OCLifeStore,AI=window.OCLifeAI;
 const META_KEY='oclife_photo_library_meta_v1',DB_NAME='oclife_photo_library_v1',STORE='photos';
 let renderQueued=false,objectUrls=new Map();
@@ -12,8 +12,8 @@ function saveMeta(list){localStorage.setItem(META_KEY,JSON.stringify(list));wind
 function meta(id){return loadMeta().find(x=>x.id===id)||null}
 function updateMeta(id,patch){const list=loadMeta(),i=list.findIndex(x=>x.id===id);if(i<0)return null;list[i]={...list[i],...patch,updatedAt:Date.now()};saveMeta(list);return list[i]}
 function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||new Error('照片資料庫開啟失敗'))})}
-async function putBlob(id,blob){const db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({id,blob,updatedAt:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
-async function getBlob(id){try{const db=await openDB(),out=await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(id);r.onsuccess=()=>resolve(r.result?.blob||null);r.onerror=()=>reject(r.error)});db.close();return out}catch(_){return null}}
+async function putBlob(id,blob){const bytes=await blob.arrayBuffer(),db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({id,bytes,type:blob.type||'image/jpeg',updatedAt:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
+async function getBlob(id){try{const db=await openDB(),out=await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(id);r.onsuccess=()=>{const rec=r.result;if(rec?.blob)return resolve(rec.blob);if(rec?.bytes)return resolve(new Blob([rec.bytes],{type:rec.type||'image/jpeg'}));resolve(null)};r.onerror=()=>reject(r.error)});db.close();return out}catch(_){return null}}
 async function deleteBlob(id){try{const db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch(_){}}
 async function photoUrl(id){if(objectUrls.has(id))return objectUrls.get(id);const blob=await getBlob(id);if(!blob)return'';const url=URL.createObjectURL(blob);objectUrls.set(id,url);return url}
 function visibleFor(p,wid){if(!p||!wid)return false;const mode=p.visibilityMode||'all',ids=Array.isArray(p.worldIds)?p.worldIds:[];if(mode==='only')return ids.includes(wid);if(mode==='exclude')return !ids.includes(wid);return true}
