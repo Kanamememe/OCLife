@@ -1,5 +1,5 @@
 {
-  "version": "20260816-1",
-  "releasedAt": "2026-08-16T23:58:00+09:00",
-  "notes": "Add a global photo library for image moments, EXIF GPS reading, manual location fallback, AI character selection/captioning, and per-photo world visibility or exclusions"
+  "version": "20260817-1",
+  "releasedAt": "2026-08-17T18:45:00+09:00",
+  "notes": "Add multi-select batch photo upload, per-file EXIF parsing and world visibility controls, plus configurable question memories with important memories available to character chat and moment context"
 }

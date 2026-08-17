@@ -24,6 +24,8 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done < <(find js scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+      - name: Materialize runtime release notice
+        run: node scripts/materialize-release-notice.mjs
       - name: JSON syntax
         run: |
           node -e "JSON.parse(require('fs').readFileSync('version.json','utf8'))"
@@ -78,5 +80,9 @@ jobs:
         run: node scripts/moment-reply-smoke.mjs
       - name: Photo moment WebKit smoke test
         run: node scripts/photo-moment-smoke.mjs
+      - name: Photo multi-upload WebKit smoke test
+        run: node scripts/photo-multi-upload-smoke.mjs
+      - name: Question memory WebKit smoke test
+        run: node scripts/question-memory-smoke.mjs
       - name: Shared-world two-client WebKit smoke test
         run: node scripts/shared-world-smoke.mjs

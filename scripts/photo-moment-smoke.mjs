@@ -49,7 +49,7 @@ try{
   };
  },ids);
  assert.deepEqual(visibility,{globalA:true,globalB:true,excludeA:true,excludeB:false,onlyA:true,onlyB:false});
- await page.waitForFunction(id=>document.querySelector(`.moment-card[data-moment-id="${id}"] .oc-photo-moment`),ids.m);
+ await page.waitForFunction(id=>/測試地點|照片檔已遺失/.test(document.querySelector(`.moment-card[data-moment-id="${id}"] .oc-photo-moment`)?.textContent||''),ids.m);
  assert.match(await page.locator(`.moment-card[data-moment-id="${ids.m}"] .oc-photo-moment`).textContent(),/測試地點|照片檔已遺失/);
  await page.evaluate(({a,m})=>{
   const list=JSON.parse(localStorage.getItem('oclife_photo_library_meta_v1'));list[0].visibilityMode='exclude';list[0].worldIds=[a];localStorage.setItem('oclife_photo_library_meta_v1',JSON.stringify(list));window.dispatchEvent(new CustomEvent('oclife:photo-library-change'));OCLifePhotoMoments.render();
