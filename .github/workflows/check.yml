@@ -82,6 +82,10 @@ jobs:
         run: node scripts/photo-moment-smoke.mjs
       - name: Photo multi-upload WebKit smoke test
         run: node scripts/photo-multi-upload-smoke.mjs
+      - name: Photo publish and character exclusivity WebKit smoke test
+        run: node scripts/photo-publish-smoke.mjs
+      - name: Story reactions WebKit smoke test
+        run: node scripts/story-reactions-smoke.mjs
       - name: Question memory WebKit smoke test
         run: node scripts/question-memory-smoke.mjs
       - name: Shared-world two-client WebKit smoke test
