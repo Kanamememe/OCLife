@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {webkit} from 'playwright';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8'};
+const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname),rel=pathname==='/'?'index.html':pathname.replace(/^\/+/,''),file=path.resolve(root,rel);if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);res.end('Not found');return}res.writeHead(200,{'Content-Type':mime[path.extname(file).toLowerCase()]||'application/octet-stream','Cache-Control':'no-store'});fs.createReadStream(file).pipe(res)});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await webkit.launch({headless:true}),page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.addInitScript(()=>{localStorage.setItem('oclife_boot_animation_v1','0');localStorage.setItem('oclife_onboarding_v1','done');localStorage.setItem('oclife_announcement_settings_v1',JSON.stringify({mode:'never'}));localStorage.setItem('oclife_update_settings_v1',JSON.stringify({auto:false}));localStorage.setItem('oclife_auto_life_settings',JSON.stringify({enabled:false,toast:false}));localStorage.setItem('oclife_moment_threads_v1',JSON.stringify({enabled:false}))});
+await page.route('https://ngkcxzsjhftsfalpqjuu.supabase.co/**',async route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
+try{
+ await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'networkidle'});
+ await page.waitForFunction(()=>window.OCLifeStoryReactions&&window.OCLifeStore&&window.OCLifeAI);
+ const ids=await page.evaluate(()=>{const w=OCLifeStore.createWorld({name:'主線評價測試',summary:'兩名角色共同生活'}),a=OCLifeStore.createCharacter({worldId:w.id,name:'角色甲',gender:'男',personality:'嘴硬但在意乙',speech:'簡短直接'}),b=OCLifeStore.createCharacter({worldId:w.id,name:'角色乙',gender:'男',personality:'坦率活潑',speech:'自然直接'});OCLifeStore.data.settings={...OCLifeStore.data.settings,provider:'openai',baseUrl:'https://example.invalid',apiKey:'test',model:'test-model'};OCLifeStore.save();OCLifeAI.call=async()=>JSON.stringify({title:'他們讀完之後',reactions:[{character:'角色甲',text:'那段我確實做得不漂亮，但我不會否認我在意他。'},{character:'角色乙',text:'我最想吐槽的是他什麼都不說，不過至少最後沒有逃。'}]});OCLifePhone.openHome(w.id);return{w:w.id,a:a.id,b:b.id}});
+ await page.waitForSelector('[data-oc-story-reactions]');await page.click('[data-oc-story-reactions]');await page.waitForSelector('#storySource');
+ await page.fill('#storyTitle','測試主線');await page.fill('#storySource','角色甲因為害怕失去角色乙而保持沉默，最後在角色乙準備離開時坦白。');await page.click('#storyGenerate');
+ await page.waitForFunction(()=>document.querySelectorAll('.oc-story-reaction').length===2);
+ const text=await page.locator('#storyResult').textContent();assert.match(text,/那段我確實做得不漂亮/);assert.match(text,/最想吐槽/);
+ await page.click('#storySave');await page.waitForFunction(()=>OCLifeStore.all('writings').some(x=>x.type==='story-reaction'));
+ const saved=await page.evaluate(()=>OCLifeStore.all('writings').find(x=>x.type==='story-reaction'));assert.equal(saved.worldId,ids.w);assert.equal(saved.reactions.length,2);assert.match(saved.body,/角色甲/);
+ await page.click('#storyLibrary');await page.waitForSelector('.oc-story-library-item');assert.match(await page.locator('.oc-story-library-item').textContent(),/他們讀完之後/);
+ assert.deepEqual(errors,[]);console.log('Story reactions WebKit smoke test passed.');
+}finally{await browser.close();await new Promise(r=>server.close(r))}
