@@ -1,5 +1,5 @@
 {
-  "version": "20260817-1",
-  "releasedAt": "2026-08-17T18:45:00+09:00",
-  "notes": "Add multi-select batch photo upload, per-file EXIF parsing and world visibility controls, plus configurable question memories with important memories available to character chat and moment context"
+  "version": "20260819-1",
+  "releasedAt": "2026-08-19T12:00:00+09:00",
+  "notes": "Add in-character story reactions, fix image moment publishing, allow photo-only posts, explicit poster selection, and per-character exclusive photo permissions"
 }
