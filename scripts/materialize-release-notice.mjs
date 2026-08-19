@@ -1,9 +1,9 @@
 import fs from 'node:fs';
-const VERSION='20260817-1';
+const VERSION='20260819-1';
 const path='announcements.json';
 const data=JSON.parse(fs.readFileSync(path,'utf8'));
 if(!Array.isArray(data.announcements))data.announcements=[];
-if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-17',title:'照片庫批量上傳',summary:'全域照片庫現在可以一次多選並上傳多張照片，不需要再一張一張加入。',items:['照片選擇器支援一次多選多張圖片。','每張照片會分別解析 EXIF GPS，互不覆蓋。','整批照片會一次寫入 IndexedDB，避免只成功保存第一張。','上傳完成後可把相同的世界可見範圍一次套用到整批照片。','每張照片的位置與畫面補充仍可之後個別修改。','批量上傳過程新增進度提示。']});
+if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-19',title:'角色主線評議與圖片動態修復',summary:'角色現在能閱讀並評價自己的主線；圖片動態修復實際發佈流程，並新增指定發文者與角色專屬照片。',items:['手機世界首頁新增「主線評議」，可讓全員或指定角色閱讀並評價使用者寫的主線。','主線評議提供後設讀後感與親身經歷回顧兩種模式，結果可儲存。','修正圖片動態發佈後沒有出現在動態頁、照片沒有掛到正確卡片的問題。','圖片動態可明確指定發文角色，也可讓 AI 在有權使用照片的角色中選角。','圖片動態正文可留空，支援只發照片。','照片新增角色權限：全部、屏蔽指定角色、僅限指定角色（專屬照片）。','角色限制不會刪除已經發佈的圖片動態。','新增圖片實際發佈、角色專屬權限與主線評議 WebKit 測試。']});
 data.latest=VERSION;
 fs.writeFileSync(path,JSON.stringify(data,null,2)+'\n');
 console.log(`Materialized runtime release notice ${VERSION} for validation.`);
