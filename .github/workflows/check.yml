@@ -32,6 +32,8 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('announcements.json','utf8'))"
       - name: Release consistency and asset references
         run: node scripts/validate.mjs
+      - name: Story reactions and photo publishing validation
+        run: node scripts/validate-20260819.mjs
 
   postgres-smoke:
     needs: validate
