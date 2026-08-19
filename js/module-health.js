@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='2.5.0';
+const VERSION='2.5.1';
 const REQUIRED=[
  ['資料庫','OCLifeStore',['all','get','add','update','remove','save']],
  ['AI','OCLifeAI',['call','listModels']],
@@ -13,6 +13,7 @@ const REQUIRED=[
  ['主線評議','OCLifeStoryReactions',['open','library']],
  ['IF線','OCLifeIFStudio',['open','library']],
  ['事件簿','OCLifeEvents',['open','createEvent']],
+ ['動態卡片綁定','OCLifeMomentCardIdentity',['bind']],
  ['動態留言','OCLifeMomentThreads',['openComposer','renderAll']],
  ['朋友圈介面','OCLifeMomentWeChatUI',['render']],
  ['圖片動態','OCLifePhotoMoments',['openLibrary','openPost','publishMoment','visibleFor','characterAllowed','render']],
