@@ -1,5 +1,5 @@
 {
-  "version": "20260821-1",
-  "releasedAt": "2026-08-21T15:20:00+09:00",
-  "notes": "Personality Engine 2.0, proactive relationship-driven chats, character calibration examples, and optional OOC second-pass review"
+  "version": "20260821-2",
+  "releasedAt": "2026-08-21T23:10:00+08:00",
+  "notes": "One-tap world exit navigation plus persistent story memories and author-written voice calibration, including migration of saved story reactions"
 }

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
-const VERSION='20260821-1';
+const VERSION='20260821-2';
 const path='announcements.json';
 const data=JSON.parse(fs.readFileSync(path,'utf8'));
 if(!Array.isArray(data.announcements))data.announcements=[];
-if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-21',title:'人格引擎 2.0 與主動私聊',summary:'角色現在會依關係、事件與個性主動私聊；新增人格校準與可選 OOC 二次審稿。',items:['主動聊天改用關係、共同事件、最近動態、沉默時間與角色主動性決策。','角色編輯新增人格校準 2.0 與說話正反例。','聊天允許不對稱發言，寡言角色可以短回或不延伸。','動態或事件之後可能自然轉為私聊。','可選 OOC 二次審稿，避免角色被平均化成通用溫柔口吻。']});
+if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-21',title:'主線長期記憶與世界快速返回',summary:'主線不再看完就忘；作者原文可建立角色經歷與語氣校準，並新增世界內一鍵返回「我的世界」。',items:['世界內新增固定「我的世界」按鈕，可從手機首頁直接返回世界管理頁。','新儲存的主線可選「事件＋語氣都納入」「只學語氣」「不納入記憶」。','主線分析只從作者貼上的原文抽取，不會用 AI 自己生成的評價反向教角色。','主線可抽取角色親身經歷、關係變化、說話方式、稱呼、句型、情緒外露與習慣。','已儲存的舊主線收藏可批量重新分析，沿用新版長期記憶與人格學習。','未曾儲存原文的舊評價無法憑空恢復，需重新貼上主線。']});
 data.latest=VERSION;
 fs.writeFileSync(path,JSON.stringify(data,null,2)+'\n');
 console.log(`Materialized runtime release notice ${VERSION} for validation.`);
