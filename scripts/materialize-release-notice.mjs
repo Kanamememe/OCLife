@@ -1,9 +1,9 @@
 import fs from 'node:fs';
-const VERSION='20260819-1';
+const VERSION='20260821-1';
 const path='announcements.json';
 const data=JSON.parse(fs.readFileSync(path,'utf8'));
 if(!Array.isArray(data.announcements))data.announcements=[];
-if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-19',title:'角色主線評議與圖片動態修復',summary:'角色現在能閱讀並評價自己的主線；圖片動態修復實際發佈流程，並新增指定發文者與角色專屬照片。',items:['手機世界首頁新增「主線評議」，可讓全員或指定角色閱讀並評價使用者寫的主線。','主線評議提供後設讀後感與親身經歷回顧兩種模式，結果可儲存。','修正圖片動態發佈後沒有出現在動態頁、照片沒有掛到正確卡片的問題。','圖片動態可明確指定發文角色，也可讓 AI 在有權使用照片的角色中選角。','圖片動態正文可留空，支援只發照片。','照片新增角色權限：全部、屏蔽指定角色、僅限指定角色（專屬照片）。','角色限制不會刪除已經發佈的圖片動態。','新增圖片實際發佈、角色專屬權限與主線評議 WebKit 測試。']});
+if(!data.announcements.some(x=>String(x?.id||x?.version||'')===VERSION))data.announcements.unshift({id:VERSION,type:'update',version:VERSION,date:'2026-08-21',title:'人格引擎 2.0 與主動私聊',summary:'角色現在會依關係、事件與個性主動私聊；新增人格校準與可選 OOC 二次審稿。',items:['主動聊天改用關係、共同事件、最近動態、沉默時間與角色主動性決策。','角色編輯新增人格校準 2.0 與說話正反例。','聊天允許不對稱發言，寡言角色可以短回或不延伸。','動態或事件之後可能自然轉為私聊。','可選 OOC 二次審稿，避免角色被平均化成通用溫柔口吻。']});
 data.latest=VERSION;
 fs.writeFileSync(path,JSON.stringify(data,null,2)+'\n');
 console.log(`Materialized runtime release notice ${VERSION} for validation.`);
