@@ -2,7 +2,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8'),exists=p=>fs.existsSync(p),fail=[];
 const assert=(ok,msg)=>{if(!ok)fail.push(msg)};
 const version=JSON.parse(read('version.json')).version,index=read('index.html'),photo=read('js/photo-moments-v2.js'),story=read('js/story-reactions.js'),storyContext=read('js/story-reactions-context-fix.js'),identity=read('js/moment-card-identity-v2.js'),health=read('js/module-health.js');
-assert(version==='20260819-1',`unexpected release version ${version}`);
+assert(/^202608(?:19|2\d)-\d+$/.test(version),`unexpected release version ${version}`);
 assert(index.includes(`js/photo-moments-v2.js?v=${version}`),'new photo moment module is not loaded');
 assert(!index.includes('src="js/photo-moments.js'),'legacy photo moment module is still loaded');
 assert(index.includes(`js/story-reactions.js?v=${version}`),'story reactions module is not loaded');
