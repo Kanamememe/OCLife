@@ -1,5 +1,5 @@
 {
-  "version": "20260819-1",
-  "releasedAt": "2026-08-19T12:00:00+09:00",
-  "notes": "Add in-character story reactions, fix image moment publishing, allow photo-only posts, explicit poster selection, and per-character exclusive photo permissions"
+  "version": "20260821-1",
+  "releasedAt": "2026-08-21T15:20:00+09:00",
+  "notes": "Personality Engine 2.0, proactive relationship-driven chats, character calibration examples, and optional OOC second-pass review"
 }

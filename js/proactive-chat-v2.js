@@ -1,0 +1,22 @@
+(function(){
+'use strict';
+const VERSION='2.0.0',S=window.OCLifeStore,KEY='oclife_proactive_chat_v2';let timer=null,busy=false;
+function state(){try{return{lastByWorld:{},...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(_){return{lastByWorld:{}}}}
+function save(x){try{localStorage.setItem(KEY,JSON.stringify(x))}catch(_){}}
+function rel(a,b){return(a.relationshipLinks||[]).find(x=>x.characterId===b.id)||null}
+function behavior(c){return window.OCLifePersonalityV2?.behavior?.(c)||{initiative:50,jealousy:35,contactBias:''}}
+function lastChatAt(worldId,a,b){const chat=S.all('chats',{worldId}).find(c=>c.memberIds?.includes(a.id)&&c.memberIds?.includes(b.id));return Number(chat?.lastAt||0)}
+function lastMomentAt(worldId,id){return Math.max(0,...S.all('moments',{worldId}).filter(m=>m.characterId===id).map(m=>Number(m.at||0)))}
+function recentEventBoost(worldId,a,b){const cutoff=Date.now()-12*60*60*1000;return S.all('events',{worldId}).some(e=>Number(e.at||e.createdAt||0)>cutoff&&(e.characterIds||[]).includes(a.id)&&(e.characterIds||[]).includes(b.id))?28:0}
+function relationBoost(a,b){const r=rel(a,b),rr=rel(b,a),t=`${r?.type||''} ${rr?.type||''} ${r?.interactionStyle||''} ${rr?.interactionStyle||''}`;let v=(r||rr)?18:0;if(/戀|情侶|伴侶|夫妻|愛人|曖昧|主寵|摯友|親密/.test(t))v+=22;if(/敵|仇|宿敵|競爭/.test(t))v+=8;return v}
+function pairScore(worldId,a,b){const now=Date.now(),ba=behavior(a),bb=behavior(b),last=lastChatAt(worldId,a,b),hours=last?(now-last)/3600000:48,silence=Math.min(35,hours*2.1),event=recentEventBoost(worldId,a,b),momentA=lastMomentAt(worldId,a.id),momentB=lastMomentAt(worldId,b.id),momentBoost=(momentA>last&&now-momentA<3*3600000?12:0)+(momentB>last&&now-momentB<3*3600000?12:0),initiative=(ba.initiative+bb.initiative)/4,relation=relationBoost(a,b),jitter=Math.random()*16;return{score:silence+event+momentBoost+initiative+relation+jitter,a,b,last,hours,event,momentBoost}}
+function ranked(worldId){const cs=S.all('characters',{worldId}),out=[];for(let i=0;i<cs.length;i++)for(let j=i+1;j<cs.length;j++)out.push(pairScore(worldId,cs[i],cs[j]));return out.sort((x,y)=>y.score-x.score)}
+function pickPair(worldId,{force=false}={}){const all=ranked(worldId);if(!all.length)return null;const top=all[0],threshold=force?0:64;if(top.score<threshold)return null;return top}
+async function autonomousChat(worldId,opts={}){if(busy)return null;const pair=pickPair(worldId,opts);if(!pair)return null;busy=true;try{const chat=S.ensureChat(worldId,pair.a.id,pair.b.id),made=await window.OCLifeSimulator.generateChatById(chat.id),st=state();st.lastByWorld[worldId]=Date.now();st.lastPair=[pair.a.id,pair.b.id];save(st);window.dispatchEvent(new CustomEvent('oclife:proactive-chat',{detail:{worldId,chatId:chat.id,aId:pair.a.id,bId:pair.b.id,score:pair.score}}));return made}finally{busy=false}}
+function patch(){const sim=window.OCLifeSimulator;if(!sim||sim.__proactiveV2)return false;sim.__proactiveV2=true;sim.randomAutonomousChat=sim.autonomousChat;sim.autonomousChat=(worldId)=>autonomousChat(worldId,{force:true});return true}
+function currentWorld(){return window.OCLifeWorldContext?.get?.()||window.OCLifePhone?.activeWorldId||null}
+function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{const wid=currentWorld(),settings=window.OCLifeAutoLife?.settings?.()||{};if(wid&&settings.enabled!==false&&settings.chat!==false&&document.visibilityState==='visible'){const st=state(),last=Number(st.lastByWorld?.[wid]||0);if(Date.now()-last>5*60000)try{await autonomousChat(wid)}catch(e){console.warn('[OC Life] proactive chat',e)}}schedule()},(5+Math.random()*8)*60000)}
+function afterLife(e){const d=e.detail||{},wid=d.worldId;if(!wid||!['moment','event'].includes(d.type))return;const st=state(),last=Number(st.lastByWorld?.[wid]||0);if(Date.now()-last<4*60000)return;setTimeout(()=>{if(document.visibilityState==='visible')autonomousChat(wid).catch(e=>console.warn('[OC Life] reactive chat',e))},12000+Math.random()*18000)}
+function install(){patch();window.addEventListener('oclife:auto-life-generated',afterLife);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){patch();const wid=currentWorld();if(wid)setTimeout(()=>autonomousChat(wid).catch(()=>{}),1800)}});schedule()}
+window.OCLifeProactiveChat={version:VERSION,behavior,ranked,pickPair,run:autonomousChat,patch};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',install,{once:true}):install();
+})();
